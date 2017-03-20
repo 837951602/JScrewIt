@@ -505,6 +505,15 @@ var validMaskFromArrayOrStringOrFeature;
             excludes: ['ESC_HTML_ALL'],
             includes: ['ESC_HTML_QUOT']
         },
+        FF_SRC:
+        {
+            description:
+                'A string representation of native functions typical for FireFox.\n' +
+                'Remarkable traits are the lack of a line feed character ("\\n") in the ' +
+                'beginning of the string before "function" and a line feed with four whitespaces ' +
+                '("\\n    ") before the "[native code]" sequence.',
+            includes: ['NO_IE_SRC', 'NO_V8_SRC']
+        },
         FILL:
         {
             description: 'Existence of the native function Array.prototype.fill.',
@@ -585,13 +594,7 @@ var validMaskFromArrayOrStringOrFeature;
                 'Remarkable traits are the presence of a line feed character ("\\n") in the ' +
                 'beginning of the string before "function" and a line feed with four whitespaces ' +
                 '("\\n    ") before the "[native code]" sequence.',
-            check: function ()
-            {
-                var available = /^\nfunction Object\(\) \{\n    \[native code]\n\}/.test(Object);
-                return available;
-            },
-            includes: ['NO_V8_SRC'],
-            excludes: ['NODECONSTRUCTOR', 'NO_IE_SRC']
+            includes: ['NO_FF_SRC', 'NO_V8_SRC']
         },
         INCR_CHAR:
         {
@@ -643,8 +646,20 @@ var validMaskFromArrayOrStringOrFeature;
                     typeof Node !== 'undefined' && Node + '' === '[object NodeConstructor]';
                 return available;
             },
-            excludes: ['IE_SRC'],
             attributes: { 'web-worker': 'web-worker-restriction' }
+        },
+        NO_FF_SRC:
+        {
+            description:
+                'A string representation of native functions typical for both IE and V8.\n' +
+                'A most remarkable trait of this feature is the presence of a line feed being ' +
+                'followed by four whitespaces ("\\n    ") before the "[native code]" sequence ' +
+                'if and only if there is a line feed at the beginning.',
+            check: function ()
+            {
+                var available = /^(\n?)function Object\(\) \{\1 +\[native code]\s\}/.test(Object);
+                return available;
+            }
         },
         NO_IE_SRC:
         {
@@ -657,8 +672,7 @@ var validMaskFromArrayOrStringOrFeature;
             {
                 var available = /^function Object\(\) \{(\n   )? \[native code]\s\}/.test(Object);
                 return available;
-            },
-            excludes: ['IE_SRC']
+            }
         },
         NO_V8_SRC:
         {
@@ -671,8 +685,7 @@ var validMaskFromArrayOrStringOrFeature;
             {
                 var available = /^\n?function Object\(\) \{\n    \[native code]\s\}/.test(Object);
                 return available;
-            },
-            excludes: ['V8_SRC']
+            }
         },
         NO_OLD_SAFARI_ARRAY_ITERATOR:
         {
@@ -744,13 +757,7 @@ var validMaskFromArrayOrStringOrFeature;
                 'found in Edge.\n' +
                 'Remarkable traits are the lack of characters in the beginning of the string ' +
                 'before "function" and a single whitespace before the "[native code]" sequence.',
-            check: function ()
-            {
-                var available = /^.{19} \[native code] \}/.test(Object);
-                return available;
-            },
-            includes: ['NO_IE_SRC'],
-            excludes: ['NO_V8_SRC']
+            includes: ['NO_FF_SRC', 'NO_IE_SRC']
         },
         WINDOW:
         {
@@ -1638,6 +1645,7 @@ var validMaskFromArrayOrStringOrFeature;
         function (mask)
         {
             var compatible =
+                !maskIncludes(mask, featureArrayToMask(['NO_FF_SRC', 'NO_IE_SRC', 'NO_V8_SRC'])) ||
                 incompatibleMasks.every(
                     function (incompatibleMask)
                     {
